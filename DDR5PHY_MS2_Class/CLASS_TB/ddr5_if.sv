@@ -1,4 +1,4 @@
-interface ddr5_if #(
+interface ddr5_if #(parameter int n = 7);
     //  ---Input Signals to the PHY block ---
     logic [n:0] dfi_cs_n_pN;
     logic [n:0] dfi_address_pN;
@@ -32,7 +32,7 @@ interface ddr5_if #(
     logic [n:0] CRC_in_data;
 
     //Output from CRC
-    logic [n:0] CRC_code
+    logic [n:0] CRC_code;
 
     // ---Output Signals from the PHY ---
     logic CS_n;
@@ -43,7 +43,7 @@ interface ddr5_if #(
     logic DQ_valid;
     logic [n:0] DQS;
     logic DQS_valid;
-);
+
 
 // ---RegisterFile Modport
 modport registerFile (
