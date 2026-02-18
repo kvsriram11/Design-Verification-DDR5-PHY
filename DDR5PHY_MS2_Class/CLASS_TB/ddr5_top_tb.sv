@@ -1,11 +1,8 @@
 `include "ddr5_if.sv"
 `include "test.sv"
 
-module top_tb;
-
-    parameter pDRAM_SIZE = 4;
-    parameter BUS_WIDTH = (2 * pDRAM_SIZE)-1;
-
+module top_tb #(parameter pDRAM_SIZE = 4,
+    		parameter BUS_WIDTH = (2 * pDRAM_SIZE)-1);
     bit clk;
     bit rst_n;
 
@@ -19,8 +16,6 @@ module top_tb;
     ddr5_if #(.n(BUS_WIDTH)) intf_top();
 
     assign intf_top.clk = clk;
-
-    test t1(intf_top);
 
     ddr5_phy_crc #(.pDRAM_SIZE(pDRAM_SIZE)) DUT(
                                                 .clk_i(clk), 
