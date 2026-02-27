@@ -1,0 +1,34 @@
+class ddr5_environment extends uvm_env;
+
+    `uvm_component_utils(ddr5_environment)
+
+    ddr5_agent agnt;
+    ddr5_scoreboard scb;
+
+
+    function new(string_name = ddr5_environment, uvm_component parent);
+        super.new(name, parent);
+        `uvm_info("ENV: [%0t] Insider Constructor", $time)
+    endfunction //new()
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        `uvm_info("ENV: [%0t] Build Phase Constructor", $time)
+
+        //UVM Factor Objects for UVCs
+        agnt = ddr5_agent::type_id::create("agnt", this);
+        scb = ddr5_scoreboard::type_id::create("scb", this);
+    endfunction
+
+    function void connect_phase(phase);
+        super.connect_phase(phase);
+        `uvm_info("ENV: [%0t] Connect Phase", $time)
+
+        //Connect Export to the analysis port of the monitor
+        agnt.mon.monitor_port.connect(scb..scoreboard_port);
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        super.run_phase(phase);
+    endtask //
+endclass //ddr5_environment extends uvm_env
