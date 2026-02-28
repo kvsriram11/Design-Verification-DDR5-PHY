@@ -25,12 +25,16 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
     typedef enum {DATA_INTEGRITY, SAME_RANK_COLLISION, B2B_PHASE_HIT} testModeState;
     rand testModeState testMode;
 
+    task print_start ();
+        `uvm_info("PKT", "Packet Sequence Item Started", UVM_LOW)
+    endtask //
+
     //--- This prints the unique data for each phase to the log
     function void post_randomize();
-        `uvm_info("PKT_GEN", $sformatf("Packet Generated | Mode: %s | Ratio: %0b", 
+        `uvm_info("PKT", $sformatf("Packet Generated | Mode: %s | Ratio: %0b", 
                   testMode.name(), current_ratio), UVM_LOW)
         foreach(dfi_address_pN[i]) begin
-            `uvm_info("PKT_DATA", $sformatf("Phase[%0d]: Addr=0x%h, Data=0x%h, CS_n=0x%h", 
+            `uvm_info("PKT", $sformatf("Phase[%0d]: Addr=0x%h, Data=0x%h, CS_n=0x%h", 
                       i, dfi_address_pN[i], dfi_wrdata_pN[i], dfi_cs_n_pN[i]), UVM_HIGH)
         end
     endfunction
@@ -88,6 +92,10 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
             (dfi_cs_n_pN[i] != 0) -> (dfi_wrdata_en_pN[i] == 0);    // Disable write if CS is idle 
         }
     }
+
+    task print_end ();
+        `uvm_info("PKT", "Packet Sequence Item Ended", UVM_LOW)
+    endtask //
 
     function new(string name = "ddr5_packet");
         super.new(name);
