@@ -1,3 +1,8 @@
+/* Code: DDR5 PHY Interface code
+   Author: 
+   Course: ECE-593 Fundamentals of Pre-Silicon Validation
+*/
+
 class ddr5_environment extends uvm_env;
 
     //--- UVM Factory Registration
