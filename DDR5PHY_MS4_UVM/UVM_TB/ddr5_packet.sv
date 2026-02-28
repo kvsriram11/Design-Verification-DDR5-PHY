@@ -1,4 +1,4 @@
-/* Code: DDR5 PHY Interface code
+/* Code: DDR5 PHY Sequence Item code
    Author: Amogh Thakur
    Course: ECE-593 Fundamentals of Pre-Silicon Validation
 */
