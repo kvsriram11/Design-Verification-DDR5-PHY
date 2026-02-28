@@ -1,3 +1,8 @@
+/* Code: DDR5 PHY Interface code
+   Author: Amogh Thakur
+   Course: ECE-593 Fundamentals of Pre-Silicon Validation
+*/
+
 class ddr5_packet #(parameter pDRAM_SIZE = 4,
                     parameter pNUM_RANK = 2) extends uvm_sequence_item;
 
@@ -20,8 +25,18 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
     typedef enum {DATA_INTEGRITY, SAME_RANK_COLLISION, B2B_PHASE_HIT} testModeState;
     rand testModeState testMode;
 
+    //--- This prints the unique data for each phase to the log
+    function void post_randomize();
+        `uvm_info("PKT_GEN", $sformatf("Packet Generated | Mode: %s | Ratio: %0b", 
+                  testMode.name(), current_ratio), UVM_LOW)
+        foreach(dfi_address_pN[i]) begin
+            `uvm_info("PKT_DATA", $sformatf("Phase[%0d]: Addr=0x%h, Data=0x%h, CS_n=0x%h", 
+                      i, dfi_address_pN[i], dfi_wrdata_pN[i], dfi_cs_n_pN[i]), UVM_HIGH)
+        end
+    endfunction
+
     constraint stress_weights {
-        testMode dist{
+        testMode dist {
             DATA_INTEGRITY:= 20,
             SAME_RANK_COLLISION:= 50,
             B2B_PHASE_HIT:= 30
@@ -76,9 +91,6 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
 
     function new(string name = "ddr5_packet");
         super.new(name);
-        `uvm_info("PKT: [%0t] Packet Class Started", $time)
-
-        `uvm_info("PKT: [%0t] Packet Class Ended", $time)
     endfunction: new
  //new()
 endclass //ddr5_packet extends superClass
