@@ -1,4 +1,4 @@
-/* Code: DDR5 PHY Sequence Item code
+/* Code: DDR5 PHY Interface code
    Author: Amogh Thakur
    Course: ECE-593 Fundamentals of Pre-Silicon Validation
 */
@@ -41,16 +41,16 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
 
     constraint stress_weights {
         testMode dist {
-            DATA_INTEGRITY:= 20,
-            SAME_RANK_COLLISION:= 50,
-            B2B_PHASE_HIT:= 30
+            DATA_INTEGRITY      := 20,
+            SAME_RANK_COLLISION := 50,
+            B2B_PHASE_HIT       := 30
         };
         current_ratio == 2'b10;             //--- Force 1:4 ratio for maximum bandwidth stress
     }
 
     //--- Check the data integrity 
     //--- Forces a walking-1 so that the scoreboard can detect MUX phase-swap
-    constraint c_integrity{
+    constraint c_integrity {
         if (testMode == DATA_INTEGRITY) {
             foreach (dfi_wrdata_pN[i]) {
                 dfi_wrdata_pN[i] == (1 << i); 
@@ -61,7 +61,7 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
 
     //--- Same Rank Collision
     //--- Forces multiple phases to target the exact same chip select
-    constraint c_collision{
+    constraint c_collision {
         if (testMode == SAME_RANK_COLLISION) {
             foreach (dfi_cs_n_pN[i]) {
                 dfi_cs_n_pN[i] == 0;      // Force Rank 0 Active in all phases
@@ -79,10 +79,10 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
                 dfi_wrdata_en_pN[i] == 1;       // Pipe is 100% full
                 dfi_cs_n_pN[i] == 0;
 
-            //--- Check address unique to next phase to prevent "Ping-pon effect"
-            if (i<3) {
-                dfi_address_pN[i] != dfi_address_pN[i+1];
-            }
+                //--- Check address unique to next phase to prevent "Ping-pon effect"
+                if (i < 3) {
+                    dfi_address_pN[i] != dfi_address_pN[i+1];
+                }
             }
         }
     }
@@ -100,5 +100,5 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
     function new(string name = "ddr5_packet");
         super.new(name);
     endfunction: new
- //new()
+//new()
 endclass //ddr5_packet extends superClass
