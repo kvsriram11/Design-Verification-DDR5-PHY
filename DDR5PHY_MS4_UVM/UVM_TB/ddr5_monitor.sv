@@ -1,46 +1,89 @@
 class ddr5_monitor extends uvm_monitor;
 
-    //--- UVM registration of the monitor class
+    //--- UVM Factory Registration
     `uvm_component_utils(ddr5_monitor)
 
-    //--- We need to access virtual interface to interact with the DUT
+    //--- Virtual interface and packet handles
     virtual ddr5_if vif;
-    ddr5_packet item;
+    ddr5_packet     item;
 
-    //--- TLM analysis port needs to be created for monitor
-    //--- Create handle for the analysis port
+    //--- TLM Analysis Port: broadcasts sampled transactions to scoreboard
     uvm_analysis_port #(ddr5_packet) monitor_port;
 
-    function new(string_name="ddr5_monitor", uvm_component parent);
+    //--- Standard UVM Constructor
+    function new(string name = "ddr5_monitor", uvm_component parent);
         super.new(name, parent);
-        `uvm_info("MON: [%0t] Monitor Class Started", $time)
-    endfunction //new()
+    endfunction
 
+    //--- Build Phase: create analysis port and grab virtual interface
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        `uvm_info("MON: [%0t] Build Phase", $time)
-        
+        `uvm_info("MON", "Build Phase", UVM_LOW)
+
         monitor_port = new("monitor_port", this);
 
-        if(!(uvm_config_db #(virtual ddr5_if)::get(this, "*", "vif", vif))) begin
-            `uvm_error("MON: [%0t] Failed to get Virtual Interface from inbuilt config_db", $time)
-        end
+        if (!uvm_config_db #(virtual ddr5_if)::get(this, "*", "vif", vif))
+            `uvm_fatal("MON", "Failed to get virtual interface from config_db")
     endfunction
 
-    function void connect_phase(uvm_phase phase);
-        super.connect_phase(phase);
-        `uvm_info("MON: [%0t] Connect Phase", $time)
-    endfunction
-    
+    //--- Run Phase: passively sample the DFI interface every clock cycle
+    //--- Skips sampling while reset is active
+    //--- Broadcasts each captured transaction via monitor_port
     task run_phase(uvm_phase phase);
-        super.run_phase(phase);
-        `uvm_info("MON: [%0t] Run Phase", $time)
+        `uvm_info("MON", "Run Phase Started", UVM_LOW)
 
         forever begin
-            item = ddr5_packet::type_id::create("item");            //--- Create factory object for the transaction to be observed 
+            @(posedge vif.clk_i);
 
-        //--- Use write method from monitor analysis port to boradcast the transactions
-        monitor_port.write(item);
+            //--- Do not capture during reset
+            if (vif.rst_i) continue;
+
+            item = ddr5_packet::type_id::create("item");
+
+            //--- Capture all 4 DFI input phases
+            // CS_n
+            item.dfi_cs_n_pN[0]         = vif.dfi_cs_n_p0;
+            item.dfi_cs_n_pN[1]         = vif.dfi_cs_n_p1;
+            item.dfi_cs_n_pN[2]         = vif.dfi_cs_n_p2;
+            item.dfi_cs_n_pN[3]         = vif.dfi_cs_n_p3;
+
+            // Address
+            item.dfi_address_pN[0]      = vif.dfi_address_p0;
+            item.dfi_address_pN[1]      = vif.dfi_address_p1;
+            item.dfi_address_pN[2]      = vif.dfi_address_p2;
+            item.dfi_address_pN[3]      = vif.dfi_address_p3;
+
+            // Write data
+            item.dfi_wrdata_pN[0]       = vif.dfi_wrdata_p0;
+            item.dfi_wrdata_pN[1]       = vif.dfi_wrdata_p1;
+            item.dfi_wrdata_pN[2]       = vif.dfi_wrdata_p2;
+            item.dfi_wrdata_pN[3]       = vif.dfi_wrdata_p3;
+
+            // Write mask
+            item.dfi_wrdata_mask_pN[0]  = vif.dfi_wrdata_mask_p0;
+            item.dfi_wrdata_mask_pN[1]  = vif.dfi_wrdata_mask_p1;
+            item.dfi_wrdata_mask_pN[2]  = vif.dfi_wrdata_mask_p2;
+            item.dfi_wrdata_mask_pN[3]  = vif.dfi_wrdata_mask_p3;
+
+            // Write enable
+            item.dfi_wrdata_en_pN[0]    = vif.dfi_wrdata_en_p0;
+            item.dfi_wrdata_en_pN[1]    = vif.dfi_wrdata_en_p1;
+            item.dfi_wrdata_en_pN[2]    = vif.dfi_wrdata_en_p2;
+            item.dfi_wrdata_en_pN[3]    = vif.dfi_wrdata_en_p3;
+
+            // Frequency ratio (from register file output visible on interface)
+            item.current_ratio          = vif.dfi_freq_ratio;
+
+            `uvm_info("MON", $sformatf("[%0t] Transaction sampled | ratio: %0b | wr_en: p0=%0b p1=%0b p2=%0b p3=%0b",
+                        $time,
+                        item.current_ratio,
+                        item.dfi_wrdata_en_pN[0], item.dfi_wrdata_en_pN[1],
+                        item.dfi_wrdata_en_pN[2], item.dfi_wrdata_en_pN[3]), UVM_HIGH)
+
+            //--- Broadcast to scoreboard
+            monitor_port.write(item);
         end
-    endtask //
-endclass //ddr5_monitor extends superClass
+    endtask
+
+endclass //ddr5_monitor extends uvm_monitor
+
