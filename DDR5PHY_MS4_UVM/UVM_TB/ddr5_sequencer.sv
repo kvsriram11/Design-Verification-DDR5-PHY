@@ -1,3 +1,8 @@
+/* Code: DDR5 PHY Interface code
+   Author: 
+   Course: ECE-593 Fundamentals of Pre-Silicon Validation
+*/
+
 class ddr5_seqr extends uvm_sequencer #(ddr5_packet);
 
     //--- UVM Factory Registration (Components because this is static throughout the entire simulation.)
