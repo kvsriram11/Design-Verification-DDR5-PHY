@@ -24,6 +24,8 @@ class ddr5_packet_seq #(parameter pDRAM_SIZE = 4,
                         parameter pNUM_RANK  = 2)
   extends uvm_sequence #(ddr5_packet #(pDRAM_SIZE, pNUM_RANK));
 
+    //--- UVM Factory Registration (Objects because they are transient or dynamic in nature)
+    //--- Using the param utils as we are using the parameters for the pDRAM_size and pNUM_RANK
     `uvm_object_param_utils(ddr5_packet_seq #(pDRAM_SIZE, pNUM_RANK))
 
     ddr5_packet #(pDRAM_SIZE, pNUM_RANK) req;
@@ -38,6 +40,7 @@ class ddr5_packet_seq #(parameter pDRAM_SIZE = 4,
 
         repeat (50) begin
 
+            //Create UVM transaction Object 
             req = ddr5_packet #(pDRAM_SIZE, pNUM_RANK)::type_id::create("req");
 
             if (req == null)
