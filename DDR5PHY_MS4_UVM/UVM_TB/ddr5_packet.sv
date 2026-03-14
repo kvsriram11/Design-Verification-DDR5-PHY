@@ -105,7 +105,7 @@ class ddr5_packet #(parameter pDRAM_SIZE = 4,
                 dfi_wrdata_en_pN[i] == 1;       // Pipe is 100% full
                 dfi_cs_n_pN[i] == 0;
 
-                //--- Check address unique to next phase to prevent "Ping-pon effect"
+                //--- Check address unique to next phase to prevent "Ping-pong effect"
                 if (i < 3) {
                     dfi_address_pN[i] != dfi_address_pN[i+1];
                 }
