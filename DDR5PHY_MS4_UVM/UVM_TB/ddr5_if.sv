@@ -18,8 +18,8 @@ Responsibilities:
 
 -------------------------------------------------------------------------------
 */
-interface ddr5_if #(parameter pDRAM_SIZE = 4,
-                    parameter pNUM_RANK = 2)
+interface ddr5_if #(parameter pDRAM_SIZE = 4,                //Size(Width) of DRAM data bus 
+                    parameter pNUM_RANK = 2)                 //Number of DRAM Ranks 
                     (input logic clk_i);
 
     // Reset and Enable
@@ -27,53 +27,53 @@ interface ddr5_if #(parameter pDRAM_SIZE = 4,
     logic enable_i;
 
     //  ---Input Signals to the PHY block ---
-    logic [pNUM_RANK-1:0] dfi_cs_n_p0, dfi_cs_n_p1, dfi_cs_n_p2, dfi_cs_n_p3;
-    logic [pNUM_RANK-1:0] dfi_reset_n_p0, dfi_reset_n_p1, dfi_reset_n_p2, dfi_reset_n_p3;
-    logic [13:0] dfi_address_p0, dfi_address_p1, dfi_address_p2, dfi_address_p3;
-    logic [pDRAM_SIZE/4-1:0] dfi_wrdata_mask_p0, dfi_wrdata_mask_p1, dfi_wrdata_mask_p2, dfi_wrdata_mask_p3;
-    logic [2*pDRAM_SIZE-1:0] dfi_wrdata_p0, dfi_wrdata_p1, dfi_wrdata_p2, dfi_wrdata_p3;
-    logic dfi_wrdata_en_p0, dfi_wrdata_en_p1, dfi_wrdata_en_p2, dfi_wrdata_en_p3;
+    logic [pNUM_RANK-1:0] dfi_cs_n_p0, dfi_cs_n_p1, dfi_cs_n_p2, dfi_cs_n_p3;                                    //Chip-Select per Rank for each phases - Selects which rank received command
+    logic [pNUM_RANK-1:0] dfi_reset_n_p0, dfi_reset_n_p1, dfi_reset_n_p2, dfi_reset_n_p3;                        //Active low Reset to DRAM ranks
+    logic [13:0] dfi_address_p0, dfi_address_p1, dfi_address_p2, dfi_address_p3;                                 //Represents the row /column/ command address bit -  Carries DDR5 command/ address bits
+    logic [pDRAM_SIZE/4-1:0] dfi_wrdata_mask_p0, dfi_wrdata_mask_p1, dfi_wrdata_mask_p2, dfi_wrdata_mask_p3;     //Denotes which bits are valid during write - Controls byte masking during writes 
+    logic [2*pDRAM_SIZE-1:0] dfi_wrdata_p0, dfi_wrdata_p1, dfi_wrdata_p2, dfi_wrdata_p3;                         //Write data for each phase from controller
+    logic dfi_wrdata_en_p0, dfi_wrdata_en_p1, dfi_wrdata_en_p2, dfi_wrdata_en_p3;                                //Write Enable for each phase - To indicate the phase contains valid data
 
     // ---PHY Internal Signals ---
     //From Register File
-    logic [1:0] dfi_freq_ratio;
-    logic phy_CRC_mode;
+    logic [1:0] dfi_freq_ratio;                                                                                  //Controls the PHY frequency Ratio configuration 
+    logic phy_CRC_mode;                                                                                          //Enables PHY-generated CRC for DDR5 write data.
 
     //Output from Frequency Ratio
-    logic [pNUM_RANK-1:0] dfi_cs_n;
-    logic [13:0] dfi_address;
-    logic [pDRAM_SIZE/4-1:0] dfi_wrdata_mask;
-    logic dfi_wrdata_en;
-    logic [2*pDRAM_SIZE-1:0] dfi_wrdata;
+    logic [pNUM_RANK-1:0] dfi_cs_n;                                                                              //Selected Chip
+    logic [13:0] dfi_address;                                                                                    //Command/Address for current PHY Cycle
+    logic [pDRAM_SIZE/4-1:0] dfi_wrdata_mask;                                                                    //Masking Bits
+    logic dfi_wrdata_en;                                                                                         //Write Enable 
+    logic [2*pDRAM_SIZE-1:0] dfi_wrdata;                                                                         //Write data after phase seletion
 
     //Output from Command Address
-    logic [1:0] burst_length;
-    logic [7:0] preamble_pattern;
-    logic [2:0] num_preamble_cycle;
-    logic [1:0] num_postable_cycle;
-    logic DRAM_CRC_en;
+    logic [1:0] burst_length;                                                                                     //DDR5 burst size (BL16 or BL32)
+    logic [7:0] preamble_pattern;                                                                                 //Pattern used for DQS preamble before data burst.
+    logic [2:0] num_preamble_cycle;                                                                               //Number of cycles before write data where DQS toggles.
+    logic [1:0] num_postable_cycle;                                                                               //Cycles after the burst.
+    logic DRAM_CRC_en;                                                                                            //Enable CRC generation for the DRAM device.
 
     //Output from Write Data
-    logic crc_en;
-    logic [2*pDRAM_SIZE-1:0] crc_in_data;
+    logic crc_en;                                                                                                 //Enable CRC computation.
+    logic [2*pDRAM_SIZE-1:0] crc_in_data;                                                                         //Data that will be fed into the CRC generator.
 
     //Output from CRC
-    logic [2*pDRAM_SIZE-1:0] crc_code;
+    logic [2*pDRAM_SIZE-1:0] crc_code;                                                                            //DDR5 uses CRC to detect data corruption.
 
     // ---Output Signals from the PHY ---
-    logic [pNUM_RANK-1:0] CS_n;
-    logic [13:0] CA;
-    logic [(pDRAM_SIZE/4)-1:0] DM ;
-    logic [pNUM_RANK-1:0] RESET_n;
-    logic [2*pDRAM_SIZE-1:0] DQ;
-    logic DQ_valid;
-    logic [1:0] DQS;
-    logic DQS_valid;
+    logic [pNUM_RANK-1:0] CS_n;                                                                                    //Rank select line to DRAM. (Active Low)
+    logic [13:0] CA;                                                                                               //Command Address carrying commands and addresses
+    logic [(pDRAM_SIZE/4)-1:0] DM ;                                                                                //Data Mask-Same as controller mask but aligned to DRAM timing.
+    logic [pNUM_RANK-1:0] RESET_n;                                                                                 //Reset line to DRAM device.
+    logic [2*pDRAM_SIZE-1:0] DQ;                                                                                   //Actual write data sent to DRAM.
+    logic DQ_valid;                                                                                                //Indicates that DQ contains valid write data.
+    logic [1:0] DQS;                                                                                               //Used by DRAM to capture DQ data.
+    logic DQS_valid;                                                                                               //Indicates when the strobe should toggle.
 
 
 // ---FrequencyRatio Modport
 modport frequencyRatio (
-input clk_i, rst_i, enable_i, dfi_freq_ratio,
+input clk_i, rst_i, enable_i, dfi_freq_ratio,                                                                    
 input dfi_cs_n_p0, dfi_cs_n_p1, dfi_cs_n_p2, dfi_cs_n_p3,
 input dfi_address_p0, dfi_address_p1, dfi_address_p2, dfi_address_p3,
 input dfi_wrdata_p0, dfi_wrdata_p1, dfi_wrdata_p2, dfi_wrdata_p3,
